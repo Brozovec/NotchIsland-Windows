@@ -9,7 +9,7 @@ public static class L
     static readonly Dictionary<string, string> Cs = new()
     {
         ["Island"] = "Island", ["Tray"] = "Tray", ["Transit"] = "Doprava", ["Calls"] = "Hovory", ["Shot"] = "Shot", ["Notes"] = "Poznámky", ["Clipboard"] = "Schránka", ["Timer"] = "Časovač", ["Timetable"] = "Rozvrh", ["Settings"] = "Nastavení",
-        ["Nothing playing"] = "Nic nehraje", ["Nothing today"] = "Nic na dnešek", ["Drop files here"] = "Přetáhni sem soubory",
+        ["Nothing playing"] = "Nic nehraje", ["all day"] = "celý den", ["Add a calendar ICS link in Settings"] = "Přidej ICS odkaz na kalendář v Nastavení", ["Calendar (ICS link)"] = "Kalendář (ICS odkaz)", ["Nothing today"] = "Nic na dnešek", ["Drop files here"] = "Přetáhni sem soubory",
         ["Stop"] = "Zastávka", ["Routes"] = "Spojení", ["From"] = "Odkud", ["To"] = "Kam", ["on time"] = "včas", ["now"] = "teď", ["min"] = "min", ["seats"] = "míst", ["sold out"] = "vyprodáno",
         ["Enter a stop"] = "Zadej zastávku", ["Unknown stop"] = "Zastávku neznám", ["No departures within 2 h"] = "Žádné odjezdy do 2 h", ["Enter from and to, searches today's connections"] = "Zadej odkud a kam, hledá dnešní spoje",
         ["Golemio token"] = "Golemio token", ["Enter a Golemio token in Settings (free at api.golemio.cz)"] = "Zadej Golemio token v Nastavení (zdarma na api.golemio.cz)",

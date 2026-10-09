@@ -20,9 +20,9 @@ public class TimetableView : UserControl
     {
         bDay.Content = L.T("Today"); bWeek.Content = L.T("Week");
         bDay.Click += (_, _) => { week = false; Render(); }; bWeek.Click += (_, _) => { week = true; Render(); };
-        var prev = new Button { Classes = { "icon" }, Content = "‹" }; prev.Click += (_, _) => { day = day.AddDays(week ? -7 : -1); Render(); };
-        var next = new Button { Classes = { "icon" }, Content = "›" }; next.Click += (_, _) => { day = day.AddDays(week ? 7 : 1); Render(); };
-        var refresh = new Button { Classes = { "icon" }, Content = "↻" }; refresh.Click += async (_, _) => await b.RefreshAsync(true);
+        var prev = new Button { Classes = { "icon" }, Content = FA.Icon(FA.ChevronLeft, 9) }; prev.Click += (_, _) => { day = day.AddDays(week ? -7 : -1); Render(); };
+        var next = new Button { Classes = { "icon" }, Content = FA.Icon(FA.ChevronRight, 9) }; next.Click += (_, _) => { day = day.AddDays(week ? 7 : 1); Render(); };
+        var refresh = new Button { Classes = { "icon" }, Content = FA.Icon(FA.Rotate, 10) }; refresh.Click += async (_, _) => await b.RefreshAsync(true);
         title.PointerPressed += (_, _) => { day = DateTime.Today; Render(); };
         var head = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,Auto,Auto,Auto,Auto,Auto,*,Auto,Auto"), Children = { bDay, Col(bWeek, 1), Col(prev, 2), Col(title, 3), Col(src, 4), Col(next, 5), Col(new TextBlock { Text = Settings.Current.BakalariClass, FontSize = 9, FontWeight = FontWeight.Bold, Classes = { "dim" }, VerticalAlignment = VerticalAlignment.Center }, 7), Col(refresh, 8) } };
         Content = new Grid { RowDefinitions = new RowDefinitions("Auto,Auto,*"), Children = { head, Row(state, 1), Row(body, 2) } };
@@ -39,7 +39,7 @@ public class TimetableView : UserControl
         title.Text = week ? $"{L.T("Week")} {monday:d. M.}" : day.ToString("dddd d. M.", System.Globalization.CultureInfo.CurrentUICulture);
         var s = b.Source(day); src.Text = s == "" ? "" : "· " + L.T(s);
         body.Children.Clear(); state.Text = "";
-        if (!b.IsConfigured) { body.Children.Add(Center("🎓 " + L.T("Fill in Bakaláři in Settings"))); return; }
+        if (!b.IsConfigured) { body.Children.Add(Center(L.T("Fill in Bakaláři in Settings"))); return; }
         if (b.Actual == null) { body.Children.Add(Center(b.Status == "" ? "…" : b.Status)); return; }
         App.Island?.Show("timetable");
         if (week) { body.Children.Add(WeekGrid(monday)); return; }

@@ -15,6 +15,7 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        AppDomain.CurrentDomain.UnhandledException += (_, e) => Log.W("UNHANDLED: " + e.ExceptionObject);
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
@@ -22,7 +23,7 @@ public partial class App : Application
             Island.Show();
             // služby
             _ = NowPlayingService.Instance; _ = TimerService.Instance; _ = WeatherService.Instance; _ = TransitService.Instance;
-            _ = BakalariService.Instance; _ = ClipboardService.Instance; _ = CallsService.Instance; _ = NotesService.Instance;
+            _ = BakalariService.Instance; _ = ClipboardService.Instance; _ = CallsService.Instance; _ = NotesService.Instance; _ = CalendarService.Instance;
             Platform.SetLaunchAtLogin(Settings.Current.LaunchAtLogin);
             Platform.StartHotkeys(id => Avalonia.Threading.Dispatcher.UIThread.Post(async () =>
             {

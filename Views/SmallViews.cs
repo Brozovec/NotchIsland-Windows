@@ -16,9 +16,9 @@ public class CallsView : UserControl
     {
         var c = CallsService.Instance;
         var title = new TextBlock { FontSize = 12, FontWeight = FontWeight.SemiBold }; var chips = new WrapPanel { Orientation = Orientation.Horizontal };
-        void R() { title.Text = c.Running.Count > 0 ? "☎ " + L.T("On a call") + "?" : "☎ " + L.T("No call"); chips.Children.Clear(); if (c.Running.Count == 0) chips.Children.Add(new TextBlock { Text = L.T("No call app running"), FontSize = 10, Classes = { "muted" } }); foreach (var a in c.Running) chips.Children.Add(new Border { Background = new SolidColorBrush(Color.Parse(a.Color)), CornerRadius = new CornerRadius(999), Padding = new Thickness(8, 3), Margin = new Thickness(0, 0, 4, 4), Child = new TextBlock { Text = a.Name, FontSize = 10, FontWeight = FontWeight.Medium } }); }
+        void R() { title.Text = c.Running.Count > 0 ? L.T("On a call") + "?" : L.T("No call"); chips.Children.Clear(); if (c.Running.Count == 0) chips.Children.Add(new TextBlock { Text = L.T("No call app running"), FontSize = 10, Classes = { "muted" } }); foreach (var a in c.Running) chips.Children.Add(new Border { Background = new SolidColorBrush(Color.Parse(a.Color)), CornerRadius = new CornerRadius(999), Padding = new Thickness(8, 3), Margin = new Thickness(0, 0, 4, 4), Child = FA.Label(a.Name switch { "Discord" => FA.Discord, "Teams" => FA.Microsoft, "Slack" => FA.Slack, "Telegram" => FA.Telegram, "WhatsApp" => FA.Whatsapp, "Skype" => FA.Skype, _ => FA.Phone }, a.Name, 10, a.Name != "Zoom") }); }
         c.PropertyChanged += (_, _) => Avalonia.Threading.Dispatcher.UIThread.Post(R); R();
-        Content = new Border { Classes = { "tile" }, Child = new StackPanel { Spacing = 8, Children = { title, chips } } };
+        Content = new Border { Classes = { "tile" }, Child = new StackPanel { Spacing = 8, Children = { new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { FA.Icon(FA.Mic, 13, false, new SolidColorBrush(Color.Parse("#8A8A96"))), title } }, chips } } };
     }
 }
 
@@ -27,8 +27,8 @@ public class ShotView : UserControl
     public ShotView()
     {
         var s = ShotService.Instance;
-        Button B(string label, string key, string mode) { var b = new Button { Classes = { "chip" }, Content = $"{label}   {key}", HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 0, 0, 4) }; b.Click += async (_, _) => await s.CaptureAsync(mode); return b; }
-        var buttons = new StackPanel { Width = 170, Children = { B("⬚ " + L.T("Area"), "Ctrl⇧2", "area"), B("▭ " + L.T("Screen"), "Ctrl⇧1", "screen"), B("𝐓 " + L.T("Text (OCR)"), "Ctrl⇧O", "ocr") } };
+        Button B(string icon, string label, string key, string mode) { var b = new Button { Classes = { "chip" }, Content = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,8,*,Auto"), Children = { FA.Icon(icon, 10), Col(new TextBlock { Text = label, FontSize = 11, FontWeight = FontWeight.SemiBold }, 2), Col(new TextBlock { Text = key, FontSize = 10, Classes = { "dim" } }, 3) } }, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Stretch, Margin = new Thickness(0, 0, 0, 4) }; b.Click += async (_, _) => await s.CaptureAsync(mode); return b; }
+        var buttons = new StackPanel { Width = 180, Children = { B(FA.Crop, L.T("Area"), "Ctrl⇧2", "area"), B(FA.Display, L.T("Screen"), "Ctrl⇧1", "screen"), B(FA.TextIcon, L.T("Text (OCR)"), "Ctrl⇧O", "ocr") } };
         var strip = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
         var empty = new TextBlock { Text = L.T("No screenshots yet"), Classes = { "muted" }, FontSize = 11, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center };
         void R() { strip.Children.Clear(); empty.IsVisible = s.Shots.Count == 0; foreach (var sh in s.Shots) { var img = new Image { Stretch = Stretch.UniformToFill, Width = 128, Height = 84 }; try { img.Source = new Bitmap(new MemoryStream(sh.Png)); } catch { } var b = new Border { CornerRadius = new CornerRadius(8), ClipToBounds = true, Child = img, Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand) }; b.DoubleTapped += (_, _) => Platform.Reveal(sh.Path); b.PointerPressed += async (_, _) => { if (s.CopyImage != null) await s.CopyImage(sh.Png); App.Island?.Toast(L.T("Copied to clipboard")); }; strip.Children.Add(b); } }
@@ -45,8 +45,8 @@ public class NotesView : UserControl
         var n = NotesService.Instance;
         var box = new TextBox { Classes = { "dark" }, AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, Watermark = L.T("Quick note… saves automatically"), Text = n.Text, VerticalContentAlignment = VerticalAlignment.Top, FontSize = 12 };
         box.TextChanged += (_, _) => n.Text = box.Text ?? "";
-        var copy = new Button { Classes = { "icon" }, Content = "⧉" }; copy.Click += async (_, _) => { try { await TopLevel.GetTopLevel(this)!.Clipboard!.SetTextAsync(n.Text); App.Island?.Toast(L.T("Copied to clipboard")); } catch { } };
-        var clear = new Button { Classes = { "icon" }, Content = "🗑" }; clear.Click += (_, _) => { box.Text = ""; };
+        var copy = new Button { Classes = { "icon" }, Content = FA.Icon(FA.Copy, 11) }; copy.Click += async (_, _) => { try { await TopLevel.GetTopLevel(this)!.Clipboard!.SetTextAsync(n.Text); App.Island?.Toast(L.T("Copied to clipboard")); } catch { } };
+        var clear = new Button { Classes = { "icon" }, Content = FA.Icon(FA.Trash, 11) }; clear.Click += (_, _) => { box.Text = ""; };
         Content = new Grid { Children = { box, new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(6), Children = { copy, clear } } } };
     }
 }
@@ -57,7 +57,7 @@ public class ClipboardView : UserControl
     {
         var c = ClipboardService.Instance;
         var search = new TextBox { Classes = { "dark" }, Watermark = L.T("Search clipboard…") }; search.TextChanged += (_, _) => c.Query = search.Text ?? "";
-        var clear = new Button { Classes = { "icon" }, Content = "🗑" }; clear.Click += (_, _) => c.Clear();
+        var clear = new Button { Classes = { "icon" }, Content = FA.Icon(FA.Trash, 11) }; clear.Click += (_, _) => c.Clear();
         var list = new StackPanel(); var empty = new TextBlock { Text = L.T("Anything you copy shows up here. Click = paste."), Classes = { "muted" }, FontSize = 11, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
         void R()
         {
@@ -66,9 +66,9 @@ public class ClipboardView : UserControl
             {
                 var txt = new TextBlock { Text = it.Text.Replace("\n", " ⏎ "), FontSize = 11, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center };
                 var age = new TextBlock { Text = Ago(it.Date), FontSize = 9, Classes = { "dim" }, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(8, 0) };
-                var pin = new Button { Classes = { "icon" }, Content = it.Pinned ? "📌" : "📍", FontSize = 10, Opacity = it.Pinned ? 1 : 0.5 }; pin.Click += (_, e) => { e.Handled = true; c.TogglePin(it); };
-                var del = new Button { Classes = { "icon" }, Content = "×", FontSize = 10 }; del.Click += (_, e) => { e.Handled = true; c.Remove(it); };
-                var row = new Border { Classes = { "row" }, Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand), Child = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto,Auto,Auto"), Children = { txt, Col(age, 1), Col(pin, 2), Col(del, 3) } } };
+                var pin = new Button { Classes = { "icon" }, Content = FA.Icon(FA.Pin, 10, false, it.Pinned ? Brushes.Gold : new SolidColorBrush(Color.Parse("#80FFFFFF"))) }; pin.Click += (_, e) => { e.Handled = true; c.TogglePin(it); };
+                var del = new Button { Classes = { "icon" }, Content = FA.Icon(FA.Xmark, 10) }; del.Click += (_, e) => { e.Handled = true; c.Remove(it); };
+                var row = new Border { Classes = { "row" }, Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand), Child = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,8,*,Auto,Auto,Auto"), Children = { FA.Icon(FA.AlignLeft, 10, false, new SolidColorBrush(Color.Parse("#8A8A96"))), Col(txt, 2), Col(age, 3), Col(pin, 4), Col(del, 5) } } };
                 row.PointerPressed += async (_, _) => await c.PasteAsync(it);
                 list.Children.Add(row);
             }
@@ -94,13 +94,13 @@ public class TimerView : UserControl
         circle.PointerPressed += (_, _) => { if (t.IsActive) t.Toggle(); };
         var presets = new WrapPanel { Orientation = Orientation.Horizontal };
         foreach (var m in new[] { 5, 10, 15, 25, 45, 60 }) { var b = new Button { Classes = { "chip" }, Content = m.ToString(), Margin = new Thickness(0, 0, 6, 6) }; b.Click += (_, _) => t.Start(m); presets.Children.Add(b); }
-        var pomo = new Button { Classes = { "chip" }, Content = "🍅 Pomodoro", Background = new SolidColorBrush(Color.Parse("#59FF9F0A")), Margin = new Thickness(0, 0, 6, 6) }; pomo.Click += (_, _) => t.Start(25, true); presets.Children.Add(pomo);
+        var pomo = new Button { Classes = { "chip" }, Content = FA.Label(FA.Leaf, "Pomodoro", 11), Background = new SolidColorBrush(Color.Parse("#59FF9F0A")), Margin = new Thickness(0, 0, 6, 6) }; pomo.Click += (_, _) => t.Start(25, true); presets.Children.Add(pomo);
         var custom = new TextBox { Classes = { "dark" }, Watermark = L.T("min"), Width = 56 }; custom.KeyDown += (_, e) => { if (e.Key == Avalonia.Input.Key.Enter && int.TryParse(custom.Text, out var m) && m > 0) { t.Start(m); custom.Text = ""; } };
-        var pause = new Button { Classes = { "chip" }, Content = "⏸" }; pause.Click += (_, _) => t.Toggle();
-        var plus = new Button { Classes = { "chip" }, Content = "+1" }; plus.Click += (_, _) => t.AddMinute();
-        var stop = new Button { Classes = { "chip" }, Content = "■" }; stop.Click += (_, _) => t.Stop();
+        var pause = new Button { Classes = { "chip" }, Content = FA.Icon(FA.Pause, 10) }; pause.Click += (_, _) => t.Toggle();
+        var plus = new Button { Classes = { "chip" }, Content = FA.Icon(FA.Plus, 11) }; plus.Click += (_, _) => t.AddMinute();
+        var stop = new Button { Classes = { "chip" }, Content = FA.Icon(FA.Stop, 10) }; stop.Click += (_, _) => t.Stop();
         var ctl = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Children = { custom, pause, plus, stop } };
-        void R() { txt.Text = t.IsActive ? t.Text : "0:00"; ring.SweepAngle = t.Total > 0 ? 360 * t.Remaining / t.Total : 0; ring.Stroke = new SolidColorBrush(Color.Parse(t.IsBreak ? "#5AC8FA" : "#FF9F0A")); sub.Text = t.IsPomodoro ? (t.IsBreak ? L.T("break") : $"{L.T("work")} {t.Round}") : ""; pause.Content = t.Running ? "⏸" : "▶"; pause.IsVisible = plus.IsVisible = stop.IsVisible = t.IsActive; }
+        void R() { txt.Text = t.IsActive ? t.Text : "0:00"; ring.SweepAngle = t.Total > 0 ? 360 * t.Remaining / t.Total : 0; ring.Stroke = new SolidColorBrush(Color.Parse(t.IsBreak ? "#5AC8FA" : "#FF9F0A")); sub.Text = t.IsPomodoro ? (t.IsBreak ? L.T("break") : $"{L.T("work")} {t.Round}") : ""; pause.Content = FA.Icon(t.Running ? FA.Pause : FA.Play, 10); pause.IsVisible = plus.IsVisible = stop.IsVisible = t.IsActive; }
         t.PropertyChanged += (_, _) => Avalonia.Threading.Dispatcher.UIThread.Post(R); R();
         Content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 16, Children = { circle, new StackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center, Children = { presets, ctl } } } };
     }

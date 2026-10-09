@@ -35,6 +35,10 @@ public class SettingsWindow : Window
         }
         root.Children.Add(Section(L.T("Modules"), mods));
 
+        // Kalendář
+        var ics = new TextBox { Classes = { "dark" }, Text = s.CalendarIcsUrl, Watermark = "https://calendar.google.com/calendar/ical/…/basic.ics" }; ics.TextChanged += async (_, _) => { s.CalendarIcsUrl = ics.Text ?? ""; s.Save(); await CalendarService.Instance.RefreshAsync(); };
+        root.Children.Add(Section(L.T("Calendar (ICS link)"), ics, Note("Google Calendar: Settings → your calendar → \"Secret address in iCal format\". Outlook: Publish calendar → ICS. iCloud: Share → Public calendar (webcal link).")));
+
         // Doprava
         var tok = new TextBox { Classes = { "dark" }, Text = s.GolemioToken, PasswordChar = '•' }; tok.TextChanged += (_, _) => { s.GolemioToken = tok.Text ?? ""; s.Save(); };
         root.Children.Add(Section(L.T("Transit"), Field(L.T("Golemio token"), tok), Note("api.golemio.cz/api-keys (free). RegioJet / FlixBus need no key.")));

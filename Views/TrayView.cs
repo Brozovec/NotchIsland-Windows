@@ -38,8 +38,8 @@ public class TrayView : UserControl
         foreach (var f in files)
         {
             var name = new TextBlock { Text = Path.GetFileName(f), FontSize = 9, TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Center, MaxWidth = 70 };
-            var icon = new TextBlock { Text = IconFor(f), FontSize = 26, HorizontalAlignment = HorizontalAlignment.Center };
-            var del = new Button { Classes = { "icon" }, Content = "×", FontSize = 10, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top, Padding = new Thickness(3, 0) };
+            var icon = FA.Icon(FA.FileIcon(f), 26, false, new SolidColorBrush(Color.Parse(Path.GetExtension(f).ToLowerInvariant() is ".png" or ".jpg" or ".jpeg" ? "#A78BFA" : "#C7C7CC")));
+            var del = new Button { Classes = { "icon" }, Content = FA.Icon(FA.Xmark, 9), FontSize = 10, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top, Padding = new Thickness(3, 0) };
             del.Click += (_, _) => { try { File.Delete(f); } catch { } Reload(); };
             var cell = new Grid { Width = 74, Margin = new Thickness(4), Children = { new StackPanel { Spacing = 2, Children = { icon, name } }, del } };
             cell.DoubleTapped += (_, _) => Services.Platform.OpenUrl(f);
