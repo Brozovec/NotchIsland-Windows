@@ -1,0 +1,37 @@
+<Application xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="NotchIsland.App" RequestedThemeVariant="Dark">
+  <Application.Styles>
+    <FluentTheme />
+    <!-- tmavý styl ostrůvku -->
+    <Style Selector="TextBlock"><Setter Property="Foreground" Value="White"/><Setter Property="FontFamily" Value="fonts:Inter#Inter, Segoe UI, sans-serif"/></Style>
+    <Style Selector="TextBlock.muted"><Setter Property="Foreground" Value="#9A9AA6"/></Style>
+    <Style Selector="TextBlock.dim"><Setter Property="Foreground" Value="#6B6B75"/></Style>
+    <Style Selector="Button.pill"><Setter Property="Background" Value="Transparent"/><Setter Property="Foreground" Value="#8A8A96"/><Setter Property="CornerRadius" Value="999"/><Setter Property="Padding" Value="8,4"/><Setter Property="FontSize" Value="11"/><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="BorderThickness" Value="0"/></Style>
+    <Style Selector="Button.pill:pointerover /template/ ContentPresenter"><Setter Property="Background" Value="#22FFFFFF"/><Setter Property="Foreground" Value="White"/></Style>
+    <Style Selector="Button.pill.on"><Setter Property="Background" Value="#2AFFFFFF"/><Setter Property="Foreground" Value="White"/></Style>
+    <Style Selector="Button.chip"><Setter Property="Background" Value="#1AFFFFFF"/><Setter Property="Foreground" Value="White"/><Setter Property="CornerRadius" Value="999"/><Setter Property="Padding" Value="9,4"/><Setter Property="FontSize" Value="11"/><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="BorderThickness" Value="0"/></Style>
+    <Style Selector="Button.chip:pointerover /template/ ContentPresenter"><Setter Property="Background" Value="#33FFFFFF"/></Style>
+    <Style Selector="Button.icon"><Setter Property="Background" Value="Transparent"/><Setter Property="Foreground" Value="#C8C8D0"/><Setter Property="Padding" Value="4"/><Setter Property="BorderThickness" Value="0"/><Setter Property="FontSize" Value="13"/></Style>
+    <Style Selector="Button.icon:pointerover /template/ ContentPresenter"><Setter Property="Background" Value="#22FFFFFF"/></Style>
+    <Style Selector="TextBox.dark"><Setter Property="Background" Value="#14FFFFFF"/><Setter Property="Foreground" Value="White"/><Setter Property="BorderThickness" Value="0"/><Setter Property="CornerRadius" Value="8"/><Setter Property="Padding" Value="8,4"/><Setter Property="FontSize" Value="12"/><Setter Property="MinHeight" Value="26"/></Style>
+    <Style Selector="TextBox.dark:focus /template/ Border#PART_BorderElement"><Setter Property="Background" Value="#20FFFFFF"/><Setter Property="BorderThickness" Value="0"/></Style>
+    <Style Selector="TextBox.dark:pointerover /template/ Border#PART_BorderElement"><Setter Property="Background" Value="#1CFFFFFF"/><Setter Property="BorderThickness" Value="0"/></Style>
+    <Style Selector="Border.tile"><Setter Property="Background" Value="#10FFFFFF"/><Setter Property="CornerRadius" Value="12"/><Setter Property="Padding" Value="10,8"/></Style>
+    <Style Selector="Border.row"><Setter Property="Background" Value="#0AFFFFFF"/><Setter Property="CornerRadius" Value="7"/><Setter Property="Padding" Value="8,4"/><Setter Property="Margin" Value="0,0,0,3"/></Style>
+    <Style Selector="Border.row:pointerover"><Setter Property="Background" Value="#1AFFFFFF"/></Style>
+    <Style Selector="ScrollViewer"><Setter Property="Background" Value="Transparent"/></Style>
+  </Application.Styles>
+  <TrayIcon.Icons>
+    <TrayIcons>
+      <TrayIcon Icon="/Assets/icon.png" ToolTipText="NotchIsland" Clicked="TrayClicked">
+        <TrayIcon.Menu>
+          <NativeMenu>
+            <NativeMenuItem Header="Open" Click="TrayOpen"/>
+            <NativeMenuItem Header="Settings…" Click="TraySettings"/>
+            <NativeMenuItemSeparator/>
+            <NativeMenuItem Header="Quit" Click="TrayQuit"/>
+          </NativeMenu>
+        </TrayIcon.Menu>
+      </TrayIcon>
+    </TrayIcons>
+  </TrayIcon.Icons>
+</Application>

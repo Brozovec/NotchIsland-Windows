@@ -1,0 +1,36 @@
+<Window xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:v="clr-namespace:NotchIsland.Views"
+        x:Class="NotchIsland.Views.IslandWindow" Title="NotchIsland" SystemDecorations="None" Background="Transparent" TransparencyLevelHint="Transparent"
+        Topmost="True" ShowInTaskbar="False" CanResize="False" ShowActivated="False" WindowStartupLocation="Manual">
+  <Grid>
+    <!-- ostrůvek: černý tvar přisátý k horní hraně, dole kulatý -->
+    <Border x:Name="Island" HorizontalAlignment="Center" VerticalAlignment="Top" Background="Black" CornerRadius="0,0,22,22" ClipToBounds="True" BoxShadow="0 10 30 0 #99000000">
+      <Border.Transitions><Transitions><DoubleTransition Property="Width" Duration="0:0:0.28" Easing="CubicEaseOut"/><DoubleTransition Property="Height" Duration="0:0:0.28" Easing="CubicEaseOut"/></Transitions></Border.Transitions>
+      <Grid>
+        <!-- sbalený stav: křídla -->
+        <Grid x:Name="Compact" ColumnDefinitions="Auto,*,Auto" IsVisible="True">
+          <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center" Spacing="6">
+            <Border x:Name="CompactArtBorder" Width="22" Height="22" CornerRadius="6" ClipToBounds="True" IsVisible="False"><Image x:Name="CompactArt" Stretch="UniformToFill"/></Border>
+            <TextBlock x:Name="CompactLeftIcon" FontSize="13" VerticalAlignment="Center" IsVisible="False"/>
+          </StackPanel>
+          <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="0,0,12,0" VerticalAlignment="Center" Spacing="6">
+            <TextBlock x:Name="CompactRightText" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" IsVisible="False"/>
+            <v:Equalizer x:Name="CompactEq" Width="18" Height="14" IsVisible="False"/>
+          </StackPanel>
+        </Grid>
+        <!-- rozbalený stav -->
+        <Grid x:Name="Expanded" RowDefinitions="Auto,*" IsVisible="False" Opacity="0">
+          <Grid.Transitions><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.18"/></Transitions></Grid.Transitions>
+          <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="12,8,12,2">
+            <StackPanel x:Name="Tabs" Orientation="Horizontal" Spacing="3"/>
+            <Button Grid.Column="1" Classes="icon" Content="⚙" Click="OpenSettings" ToolTip.Tip="Settings"/>
+          </Grid>
+          <ContentControl x:Name="Body" Grid.Row="1" Margin="12,4,12,10"/>
+        </Grid>
+      </Grid>
+    </Border>
+    <!-- bublina -->
+    <Border x:Name="ToastBox" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,60,0,0" Background="#E6000000" CornerRadius="999" Padding="14,7" IsVisible="False">
+      <TextBlock x:Name="ToastText" FontSize="12" FontWeight="Medium"/>
+    </Border>
+  </Grid>
+</Window>
