@@ -2,6 +2,8 @@
 <h1 align="center">NotchIsland for Windows</h1>
 <p align="center">A Dynamic Island for the top of your Windows screen. Hover to expand: now playing, live transit, timetable, screenshots, clipboard, timer, weather.<br>
 <b>Created by Adam Brož</b> · Windows 10 (19041+) / 11 · .NET 8 · Avalonia UI</p>
+<p align="center"><img src="docs/banner.jpg" width="900" alt="NotchIsland for Windows"></p>
+
 <p align="center"><a href="https://github.com/Brozovec/NotchIsland-Windows/releases/latest">Download (ZIP, no install)</a> · <a href="https://github.com/Brozovec/NotchIsland">macOS version</a> · <a href="https://notchisland.brozovec.eu">Website</a></p>
 
 > **Status: first Windows build.** It was written and compiled on a Mac and could not be tested on real Windows yet. Expect rough edges and please report issues with the log file (see below).
