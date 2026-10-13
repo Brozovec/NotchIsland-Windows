@@ -23,7 +23,10 @@ public sealed class Settings
     public bool LaunchAtLogin { get; set; } = true;
     public string Language { get; set; } = "";   // "" = podle systému
     public int ClipboardLimit { get; set; } = 10;
-    public string CalendarIcsUrl { get; set; } = "";   // ICS odkaz (Google Calendar „tajná adresa ve formátu iCal“, Outlook, iCloud)
+    public string CalendarIcsUrl { get; set; } = "";
+    public string WeatherCity { get; set; } = "";     // "" = poloha podle IP adresy
+    public double WeatherLat { get; set; }
+    public double WeatherLon { get; set; }   // ICS odkaz (Google Calendar „tajná adresa ve formátu iCal“, Outlook, iCloud)
 
     static Settings Load()
     {

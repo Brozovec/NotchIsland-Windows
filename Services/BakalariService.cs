@@ -40,9 +40,9 @@ public sealed partial class BakalariService : ObservableObject
     {
         http = new HttpClient(new HttpClientHandler { CookieContainer = cookies, UseCookies = true, AllowAutoRedirect = true }) { Timeout = TimeSpan.FromSeconds(25) };
         http.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (NotchIsland)");
-        var t = new System.Timers.Timer(1800_000); t.Elapsed += async (_, _) => await RefreshAsync(); t.Start();
+        var t = new System.Timers.Timer(1800_000); t.Elapsed += (_, _) => Avalonia.Threading.Dispatcher.UIThread.Post(async () => { try { await RefreshAsync(); } catch (Exception e) { Log.W("bakalari refresh: " + e); } }); t.Start();
         var s = new System.Timers.Timer(1000); s.Elapsed += (_, _) => Avalonia.Threading.Dispatcher.UIThread.Post(UpdateState); s.Start();
-        _ = RefreshAsync();
+        Avalonia.Threading.Dispatcher.UIThread.Post(async () => { try { await RefreshAsync(); } catch (Exception e) { Log.W("bakalari refresh: " + e); } });
     }
 
     public bool IsConfigured => Settings.Current.BakalariUser != "" && Settings.Current.BakalariClass != "" && Secure.Unprotect(Settings.Current.BakalariPassword) != "";

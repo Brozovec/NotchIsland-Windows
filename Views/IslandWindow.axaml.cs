@@ -48,13 +48,16 @@ public partial class IslandWindow : Window
         ShotService.Instance.CopyImage = async png => { try { await Clipboard!.SetBitmapAsync(new Bitmap(new MemoryStream(png))); } catch { } };
         ShotService.Instance.SelectArea = async () => { Collapse(); await Task.Delay(200); return await AreaSelectWindow.PickAsync(); };
         // sbalený obsah
-        NowPlayingService.Instance.PropertyChanged += (_, _) => UpdateCompact();
-        TimerService.Instance.PropertyChanged += (_, _) => UpdateCompact();
-        BakalariService.Instance.PropertyChanged += (_, _) => UpdateCompact();
+        // Vždy přes UI vlákno – služby mění vlastnosti i z timerů na pozadí (jinak Avalonia vyhodí výjimku a aplikace spadne).
+        NowPlayingService.Instance.PropertyChanged += (_, e) => { if (e.PropertyName is nameof(NowPlayingService.IsPlaying) or nameof(NowPlayingService.Artwork) or nameof(NowPlayingService.HasMedia)) OnUi(UpdateCompact); };
+        TimerService.Instance.PropertyChanged += (_, _) => OnUi(UpdateCompact);
+        BakalariService.Instance.PropertyChanged += (_, e) => { if (e.PropertyName is nameof(BakalariService.WingText) or nameof(BakalariService.IsBreak)) OnUi(UpdateCompact); };
         UpdateCompact();
     }
 
+    static void OnUi(Action a) { if (Dispatcher.UIThread.CheckAccess()) a(); else Dispatcher.UIThread.Post(a); }
     void Place() => SyncWindow();
+    double lastW = -1, lastH = -1;
     static double ExpandedHeightFor(string tab) => tab == "timetable" ? 250 : ExpandedH;
 
     /// Okno má vždy přesně velikost ostrůvku (+ malá rezerva na stín), jinak by průhledná plocha blokovala kliknutí pod ní.
@@ -62,7 +65,8 @@ public partial class IslandWindow : Window
     {
         var scr = Screens.Primary ?? Screens.All[0]; var scale = scr.Scaling;
         double w = (expanded ? ExpandedW : CompactWidth()) + 24, h = (expanded ? ExpandedHeightFor(current) : CollapsedH) + 16;
-        Width = w; Height = h;
+        if (w == lastW && h == lastH) return;   // beze změny neposouvat okno (každý resize je drahý)
+        lastW = w; lastH = h; Width = w; Height = h;
         Position = new PixelPoint((int)(scr.Bounds.X + (scr.Bounds.Width - w * scale) / 2), scr.Bounds.Y);
     }
 
@@ -91,7 +95,7 @@ public partial class IslandWindow : Window
 
     void Expand()
     {
-        expanded = true; Compact.IsVisible = false; Expanded.IsVisible = true;
+        expanded = true; Compact.IsVisible = false; Expanded.IsVisible = true; CompactEq.Active = false;
         Island.Height = current == "timetable" ? 250 : ExpandedH;
         SyncWindow();   // nejdřív zvětšit okno, pak animovat obsah
         Island.Width = ExpandedW;
@@ -102,13 +106,24 @@ public partial class IslandWindow : Window
     {
         expanded = false; holdOpen = false; Expanded.Opacity = 0;
         Island.Width = CompactWidth(); Island.Height = CollapsedH;
-        DispatcherTimer.RunOnce(() => { if (!expanded) { Expanded.IsVisible = false; Compact.IsVisible = true; } }, TimeSpan.FromMilliseconds(200));
+        DispatcherTimer.RunOnce(() => { if (!expanded) { Expanded.IsVisible = false; Compact.IsVisible = true; CompactEq.Active = CompactEq.IsVisible; } }, TimeSpan.FromMilliseconds(200));
     }
 
     /// Hover podle skutečné polohy kurzoru (Windows); jinde přes PointerEntered/Exited.
+    bool hiddenForFullscreen; DateTime lastFsCheck = DateTime.MinValue; bool fullscreen;
     void Poll()
     {
-        var p = Platform.CursorPosition(); if (p == null) { if (!expanded || holdOpen) return; if (outsideSince != DateTime.MaxValue && (DateTime.Now - outsideSince).TotalMilliseconds > 350) { outsideSince = DateTime.MaxValue; Collapse(); } return; }
+        var p = Platform.CursorPosition();
+        // Fullscreen (video, hra, prezentace): ostrůvek schovat, ukázat jen když kurzor zajede k hornímu okraji.
+        if (p != null && !expanded)
+        {
+            if ((DateTime.Now - lastFsCheck).TotalMilliseconds > 400) { lastFsCheck = DateTime.Now; fullscreen = Platform.IsForegroundFullscreen(); }
+            var top = (Screens.Primary ?? Screens.All[0]).Bounds.Y;
+            var atTop = p.Value.y <= top + 1;
+            if (fullscreen && !atTop && !hiddenForFullscreen) { hiddenForFullscreen = true; Hide(); return; }
+            if (hiddenForFullscreen && (!fullscreen || atTop)) { hiddenForFullscreen = false; Show(); }
+            if (hiddenForFullscreen) return;
+        } if (p == null) { if (!expanded || holdOpen) return; if (outsideSince != DateTime.MaxValue && (DateTime.Now - outsideSince).TotalMilliseconds > 350) { outsideSince = DateTime.MaxValue; Collapse(); } return; }
         var scr = Screens.Primary ?? Screens.All[0]; var s = scr.Scaling;
         var cx = scr.Bounds.X + scr.Bounds.Width / 2.0;
         var w = (expanded ? ExpandedW : CompactWidth()) * s; var h = (expanded ? Island.Height : CollapsedH) * s;
@@ -119,6 +134,7 @@ public partial class IslandWindow : Window
 
     // ---- sbalený obsah: hudba / časovač / přestávka
     double CompactWidth() => NowPlayingService.Instance.IsPlaying || TimerService.Instance.IsActive || BakalariService.Instance.WingText != "" ? CollapsedW : 200;
+    byte[]? artBytes; Bitmap? artBmp;
     void UpdateCompact()
     {
         var np = NowPlayingService.Instance; var tm = TimerService.Instance; var bk = BakalariService.Instance;
@@ -127,11 +143,12 @@ public partial class IslandWindow : Window
         else if (tm.IsActive) { CompactLeftIcon.Text = tm.IsPomodoro ? FA.Leaf : FA.Stopwatch; CompactLeftIcon.FontFamily = FA.Solid; CompactLeftIcon.Foreground = tm.IsBreak ? Brushes.DeepSkyBlue : Brushes.Orange; CompactLeftIcon.IsVisible = true; CompactRightText.Text = tm.Text; CompactRightText.IsVisible = true; }
         else if (np.IsPlaying)
         {
-            if (np.Artwork != null) { try { CompactArt.Source = new Bitmap(new MemoryStream(np.Artwork)); CompactArtBorder.IsVisible = true; } catch { } }
+            if (np.Artwork != null) { try { if (!ReferenceEquals(np.Artwork, artBytes)) { artBytes = np.Artwork; artBmp = new Bitmap(new MemoryStream(np.Artwork)); } CompactArt.Source = artBmp; CompactArtBorder.IsVisible = true; } catch { } }
             else { CompactLeftIcon.Text = FA.Spotify; CompactLeftIcon.FontFamily = FA.Brands; CompactLeftIcon.Foreground = Brushes.LightGreen; CompactLeftIcon.IsVisible = true; }
             CompactEq.IsVisible = true; CompactEq.Active = true;
         }
         if (!expanded) { Island.Width = CompactWidth(); SyncWindow(); }
+        CompactEq.Active = CompactEq.IsVisible && !expanded;
     }
 
     public void Toast(string text) => ToastWindow.Show(text, Screens.Primary ?? Screens.All[0]);

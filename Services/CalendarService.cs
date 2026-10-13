@@ -18,7 +18,7 @@ public sealed partial class CalendarService : ObservableObject
 
     CalendarService()
     {
-        var t = new System.Timers.Timer(600_000); t.Elapsed += async (_, _) => await RefreshAsync(); t.Start();
+        var t = new System.Timers.Timer(600_000); t.Elapsed += async (_, _) => { try { await RefreshAsync(); } catch (Exception e) { Log.W("refresh: " + e); } }; t.Start();
         _ = RefreshAsync();
     }
 

@@ -16,6 +16,8 @@ public partial class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         AppDomain.CurrentDomain.UnhandledException += (_, e) => Log.W("UNHANDLED: " + e.ExceptionObject);
+        TaskScheduler.UnobservedTaskException += (_, e) => { Log.W("UNOBSERVED: " + e.Exception); e.SetObserved(); };
+        Avalonia.Threading.Dispatcher.UIThread.UnhandledException += (_, e) => { Log.W("UI: " + e.Exception); e.Handled = true; };
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;

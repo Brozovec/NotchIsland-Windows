@@ -23,7 +23,37 @@ public static class Platform
     [DllImport("user32.dll")] static extern int GetSystemMetrics(int i);
     [StructLayout(LayoutKind.Sequential)] struct MSG { public IntPtr hwnd; public uint message; public IntPtr wParam, lParam; public uint time; public POINT pt; }
     const uint MOD_CONTROL = 2, MOD_SHIFT = 4, WM_HOTKEY = 0x0312;
+    [DllImport("shell32.dll")] static extern int SHQueryUserNotificationState(out int state);
+    [DllImport("user32.dll")] static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll")] static extern bool GetWindowRect(IntPtr h, out RECT r);
+    [DllImport("user32.dll")] static extern IntPtr MonitorFromWindow(IntPtr h, uint flags);
+    [DllImport("user32.dll")] static extern bool GetMonitorInfo(IntPtr m, ref MONITORINFO mi);
+    [DllImport("user32.dll")] static extern int GetClassName(IntPtr h, System.Text.StringBuilder sb, int max);
+    [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
+    [StructLayout(LayoutKind.Sequential)] struct RECT { public int L, T, R, B; }
+    [StructLayout(LayoutKind.Sequential)] struct MONITORINFO { public int Size; public RECT Monitor, Work; public uint Flags; }
 #endif
+
+    /// Běží v popředí celoobrazovková aplikace (video, hra, prezentace)? Kombinuje SHQueryUserNotificationState a rozměr okna v popředí.
+    public static bool IsForegroundFullscreen()
+    {
+#if WINDOWS
+        try
+        {
+            if (SHQueryUserNotificationState(out var st) == 0 && st is 2 or 3 or 4 or 7) return true;   // BUSY, D3D fullscreen, presentation, fullscreen app
+            var h = GetForegroundWindow(); if (h == IntPtr.Zero) return false;
+            GetWindowThreadProcessId(h, out var pid); if (pid == Environment.ProcessId) return false;
+            var sb = new System.Text.StringBuilder(64); GetClassName(h, sb, 64);
+            var cls = sb.ToString(); if (cls is "Progman" or "WorkerW" or "Shell_TrayWnd") return false;   // plocha / lišta
+            if (!GetWindowRect(h, out var r)) return false;
+            var mi = new MONITORINFO { Size = Marshal.SizeOf<MONITORINFO>() };
+            if (!GetMonitorInfo(MonitorFromWindow(h, 2), ref mi)) return false;
+            return r.L <= mi.Monitor.L && r.T <= mi.Monitor.T && r.R >= mi.Monitor.R && r.B >= mi.Monitor.B;
+        }
+        catch { }
+#endif
+        return false;
+    }
 
     /// Poloha kurzoru v pixelech obrazovky (null mimo Windows).
     public static (double x, double y)? CursorPosition()

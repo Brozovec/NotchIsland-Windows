@@ -6,7 +6,7 @@
 
 <p align="center"><a href="https://github.com/Brozovec/NotchIsland-Windows/releases/latest">Download NotchIsland.exe (no install)</a> · <a href="https://github.com/Brozovec/NotchIsland">macOS version</a> · <a href="https://notchisland.brozovec.eu">Website</a></p>
 
-> **Status: first Windows build.** It was written and compiled on a Mac and could not be tested on real Windows yet. Expect rough edges and please report issues with the log file (see below).
+> **Status: v1.1.** Fixes from the first round of real-Windows testing: smooth animations while media plays, no more periodic crash (every ~30 min), auto-hide over fullscreen apps (move the mouse to the top edge to reveal), manual weather location for desktop PCs without GPS. Please keep reporting issues with the log file (see below).
 
 ## What it does
 A small black island sits at the top center of your screen. Hover it and it expands into tabs:

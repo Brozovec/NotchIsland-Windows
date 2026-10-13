@@ -23,7 +23,7 @@ public class SettingsWindow : Window
         var login = new CheckBox { Content = L.T("Launch at login"), IsChecked = s.LaunchAtLogin }; login.IsCheckedChanged += (_, _) => { s.LaunchAtLogin = login.IsChecked == true; s.Save(); Platform.SetLaunchAtLogin(s.LaunchAtLogin); };
         var lang = new ComboBox { ItemsSource = new[] { L.T("System"), "English", "Čeština" }, SelectedIndex = s.Language == "" ? 0 : s.Language == "cs" ? 2 : 1, Width = 160 };
         lang.SelectionChanged += (_, _) => { s.Language = lang.SelectedIndex switch { 1 => "en", 2 => "cs", _ => "" }; s.Save(); };
-        root.Children.Add(Section(L.T("General"), login, new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { new TextBlock { Text = L.T("Language") + " (restart)", VerticalAlignment = VerticalAlignment.Center }, lang } }, Note("NotchIsland 1.0 · Adam Brož · notchisland.brozovec.eu")));
+        root.Children.Add(Section(L.T("General"), login, new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { new TextBlock { Text = L.T("Language") + " (restart)", VerticalAlignment = VerticalAlignment.Center }, lang } }, Note("NotchIsland 1.1 · Adam Brož · notchisland.brozovec.eu")));
 
         // Moduly
         var mods = new WrapPanel { Orientation = Orientation.Horizontal };
@@ -38,6 +38,14 @@ public class SettingsWindow : Window
         // Kalendář
         var ics = new TextBox { Classes = { "dark" }, Text = s.CalendarIcsUrl, Watermark = "https://calendar.google.com/calendar/ical/…/basic.ics" }; ics.TextChanged += async (_, _) => { s.CalendarIcsUrl = ics.Text ?? ""; s.Save(); await CalendarService.Instance.RefreshAsync(); };
         root.Children.Add(Section(L.T("Calendar (ICS link)"), ics, Note("Google Calendar: Settings → your calendar → \"Secret address in iCal format\". Outlook: Publish calendar → ICS. iCloud: Share → Public calendar (webcal link).")));
+
+        // Počasí
+        var city = new TextBox { Classes = { "dark" }, Width = 260, Text = s.WeatherCity, Watermark = L.T("Automatic (by IP address)") };
+        var cityStatus = new TextBlock { FontSize = 11, Classes = { "muted" } };
+        var cityBtn = new Button { Classes = { "chip" }, Content = L.T("Find") };
+        async Task FindCity() { cityStatus.Text = "…"; var n = await WeatherService.Instance.SetCityAsync(city.Text ?? ""); cityStatus.Text = n ?? ((city.Text ?? "") == "" ? L.T("Automatic (by IP address)") : L.T("Not found")); if (n != null) city.Text = n; }
+        cityBtn.Click += async (_, _) => await FindCity(); city.KeyDown += async (_, e) => { if (e.Key == Avalonia.Input.Key.Enter) await FindCity(); };
+        root.Children.Add(Section(L.T("Weather"), Field(L.T("Location"), new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { city, cityBtn } }), cityStatus, Note(L.T("Leave empty for automatic location. Desktop PCs without GPS: type your city (e.g. Praha, Brno)."))));
 
         // Doprava
         var tok = new TextBox { Classes = { "dark" }, Text = s.GolemioToken, PasswordChar = '•' }; tok.TextChanged += (_, _) => { s.GolemioToken = tok.Text ?? ""; s.Save(); };

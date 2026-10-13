@@ -31,9 +31,11 @@ public sealed partial class NowPlayingService : ObservableObject
         _ = PollAsync();
     }
 
+    bool polling;
     async Task PollAsync()
     {
 #if WINDOWS
+        if (polling) return; polling = true;
         try
         {
             mgr ??= await Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager.RequestAsync();
@@ -55,13 +57,15 @@ public sealed partial class NowPlayingService : ObservableObject
             }
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
+                var hadMedia = HasMedia;
                 Title = props.Title; Artist = props.Artist; Album = props.AlbumTitle; App = FriendlyApp(session.SourceAppUserModelId);
                 IsPlaying = playing; Position = pos; Duration = tl.EndTime.TotalSeconds;
                 if (art != null) Artwork = art;
-                OnPropertyChanged(nameof(HasMedia));
+                if (hadMedia != HasMedia) OnPropertyChanged(nameof(HasMedia));
             });
         }
         catch (Exception e) { Log.W("nowplaying: " + e.Message); }
+        finally { polling = false; }
 #else
         await Task.CompletedTask;
 #endif

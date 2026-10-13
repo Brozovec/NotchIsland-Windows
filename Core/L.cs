@@ -21,6 +21,7 @@ public static class L
         ["Launch at login"] = "Spouštět po přihlášení", ["Modules"] = "Moduly", ["Screenshot folder"] = "Složka screenshotů", ["General"] = "Obecné", ["Language"] = "Jazyk", ["System"] = "Systém",
         ["On a call"] = "Probíhá hovor", ["No call"] = "Žádný hovor", ["No call app running"] = "Žádná hovorová appka neběží",
         ["Clear"] = "Jasno", ["Mostly clear"] = "Skoro jasno", ["Partly cloudy"] = "Polojasno", ["Overcast"] = "Zataženo", ["Fog"] = "Mlha", ["Drizzle"] = "Mrholení", ["Rain"] = "Déšť", ["Snow"] = "Sněžení", ["Showers"] = "Přeháňky", ["Thunderstorm"] = "Bouřka", ["Locating…"] = "Zjišťuji polohu…",
+        ["Weather"] = "Počasí", ["Location"] = "Poloha", ["Find"] = "Hledat", ["Not found"] = "Nenalezeno", ["Automatic (by IP address)"] = "Automaticky (podle IP adresy)", ["Leave empty for automatic location. Desktop PCs without GPS: type your city (e.g. Praha, Brno)."] = "Prázdné = automatická poloha. Stolní PC bez GPS: napiš své město (např. Praha, Brno).",
         ["Quit"] = "Ukončit", ["Open"] = "Otevřít", ["Buy ticket"] = "Koupit jízdenku", ["Track"] = "Sledovat", ["Favorite"] = "Oblíbené",
     };
     public static string T(string key) => Lang == "cs" && Cs.TryGetValue(key, out var v) ? v : key;

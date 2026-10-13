@@ -23,7 +23,7 @@ public sealed partial class WeatherService : ObservableObject
 
     WeatherService()
     {
-        var t = new System.Timers.Timer(600_000); t.Elapsed += async (_, _) => await RefreshAsync(); t.Start();
+        var t = new System.Timers.Timer(600_000); t.Elapsed += async (_, _) => { try { await RefreshAsync(); } catch (Exception e) { Log.W("refresh: " + e); } }; t.Start();
         _ = RefreshAsync();
     }
 
@@ -31,7 +31,9 @@ public sealed partial class WeatherService : ObservableObject
     {
         try
         {
-            if (lat == 0 && lon == 0)
+            var st = Settings.Current;
+            if (st.WeatherCity != "" && (st.WeatherLat != 0 || st.WeatherLon != 0)) { lat = st.WeatherLat; lon = st.WeatherLon; Avalonia.Threading.Dispatcher.UIThread.Post(() => City = st.WeatherCity); }
+            else if (lat == 0 && lon == 0)
             {
                 var ip = await Http.GetFromJsonAsync<JsonElement>("https://ipapi.co/json/");
                 lat = ip.GetProperty("latitude").GetDouble(); lon = ip.GetProperty("longitude").GetDouble();
@@ -55,6 +57,23 @@ public sealed partial class WeatherService : ObservableObject
             });
         }
         catch (Exception e) { Log.W("weather: " + e.Message); }
+    }
+
+    /// Ruční výběr města přes Open-Meteo geocoding. Vrátí název nalezeného místa, nebo null.
+    public async Task<string?> SetCityAsync(string query)
+    {
+        var s = Settings.Current;
+        if (query.Trim() == "") { s.WeatherCity = ""; s.WeatherLat = s.WeatherLon = 0; s.Save(); lat = lon = 0; await RefreshAsync(); return null; }
+        try
+        {
+            var j = await Http.GetFromJsonAsync<JsonElement>($"https://geocoding-api.open-meteo.com/v1/search?name={Uri.EscapeDataString(query.Trim())}&count=1&language={(L.Lang == "cs" ? "cs" : "en")}");
+            if (!j.TryGetProperty("results", out var res) || res.GetArrayLength() == 0) return null;
+            var r = res[0]; var name = r.GetProperty("name").GetString() ?? query;
+            if (r.TryGetProperty("country_code", out var cc)) name += ", " + cc.GetString();
+            s.WeatherCity = name; s.WeatherLat = r.GetProperty("latitude").GetDouble(); s.WeatherLon = r.GetProperty("longitude").GetDouble(); s.Save();
+            await RefreshAsync(); return name;
+        }
+        catch (Exception e) { Log.W("geocode: " + e.Message); return null; }
     }
 
     public static string Text(int code) => code switch

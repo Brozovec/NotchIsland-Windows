@@ -21,7 +21,7 @@ public sealed partial class ClipboardService : ObservableObject
     ClipboardService()
     {
         try { if (System.IO.File.Exists(File)) items = JsonSerializer.Deserialize<List<ClipItem>>(System.IO.File.ReadAllText(File)) ?? new(); } catch { }
-        var t = new System.Timers.Timer(700); t.Elapsed += async (_, _) => await PollAsync(); t.Start();
+        var t = new System.Timers.Timer(700); t.Elapsed += async (_, _) => { try { await PollAsync(); } catch (Exception e) { Log.W("clipboard: " + e.Message); } }; t.Start();
     }
     public IEnumerable<ClipItem> Filtered => (Query.Trim() == "" ? Items : Items.Where(i => i.Text.Contains(Query, StringComparison.OrdinalIgnoreCase))).OrderByDescending(i => i.Pinned).ThenByDescending(i => i.Date);
 
