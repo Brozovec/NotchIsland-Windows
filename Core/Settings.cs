@@ -21,6 +21,7 @@ public sealed class Settings
     public string ScreenshotFolder { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "NotchIsland");
     public List<string> DisabledTabs { get; set; } = new();
     public bool LaunchAtLogin { get; set; } = true;
+    public bool FirstRunDone { get; set; }
     public string Language { get; set; } = "";   // "" = podle systému
     public int ClipboardLimit { get; set; } = 10;
     public string CalendarIcsUrl { get; set; } = "";

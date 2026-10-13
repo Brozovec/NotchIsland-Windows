@@ -18,7 +18,11 @@ public partial class App : Application
         AppDomain.CurrentDomain.UnhandledException += (_, e) => Log.W("UNHANDLED: " + e.ExceptionObject);
         TaskScheduler.UnobservedTaskException += (_, e) => { Log.W("UNOBSERVED: " + e.Exception); e.SetObserved(); };
         Avalonia.Threading.Dispatcher.UIThread.UnhandledException += (_, e) => { Log.W("UI: " + e.Exception); e.Handled = true; };
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime d2 && Program.AlreadyRunning)
+        {
+            d2.ShutdownMode = ShutdownMode.OnLastWindowClose; d2.MainWindow = new AlreadyRunningWindow();
+        }
+        else if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
             Island = new IslandWindow();
@@ -27,6 +31,7 @@ public partial class App : Application
             _ = NowPlayingService.Instance; _ = TimerService.Instance; _ = WeatherService.Instance; _ = TransitService.Instance;
             _ = BakalariService.Instance; _ = ClipboardService.Instance; _ = CallsService.Instance; _ = NotesService.Instance; _ = CalendarService.Instance;
             Platform.SetLaunchAtLogin(Settings.Current.LaunchAtLogin);
+            if (!Settings.Current.FirstRunDone) { Settings.Current.LaunchAtLogin = true; Settings.Current.FirstRunDone = true; Settings.Current.Save(); Platform.SetLaunchAtLogin(true); Avalonia.Threading.DispatcherTimer.RunOnce(() => Island.Toast(L.T("NotchIsland will start with Windows. Move the mouse to the top of the screen.")), TimeSpan.FromSeconds(2)); }
             Platform.StartHotkeys(id => Avalonia.Threading.Dispatcher.UIThread.Post(async () =>
             {
                 switch (id)

@@ -14,7 +14,7 @@ public static class FA
         Stopwatch = "", Graduation = "", Gear = "", Star = "", Cart = "", Search = "", Rotate = "", Swap = "", Location = "", Mug = "", Book = "",
         Play = "", Pause = "", Backward = "", Forward = "", Plus = "+", Stop = "", Leaf = "", Pin = "", Xmark = "", Trash = "", Copy = "", AlignLeft = "",
         ChevronLeft = "", ChevronRight = "", Crop = "", Display = "", TextIcon = "", Mic = "", MicSlash = "", Folder = "", FileImage = "", FilePdf = "", FileZip = "",
-        FileVideo = "", FileAudio = "", FileWord = "", FileExcel = "", File = "", Sun = "", Moon = "", CloudSun = "", CloudMoon = "", Cloud = "", Smog = "", Rain = "", Snow = "", Bolt = "", Check = "", Sunrise = "", Bell = "";
+        FileVideo = "", FileAudio = "", FileWord = "", FileExcel = "", File = "", Sun = "", Moon = "", CloudSun = "", CloudMoon = "", Cloud = "", Smog = "", Rain = "", Snow = "", Bolt = "", Check = "", Calendar = "", Globe = "", Key = "", Sliders = "", Power = "", Grid = "", Info = "", Sunrise = "", Bell = "";
     // brands
     public const string Spotify = "", Apple = "", Chrome = "", Windows = "", Discord = "", Microsoft = "", Slack = "", Telegram = "", Whatsapp = "", Skype = "", Youtube = "";
 

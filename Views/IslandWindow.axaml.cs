@@ -60,14 +60,14 @@ public partial class IslandWindow : Window
     double lastW = -1, lastH = -1;
     static double ExpandedHeightFor(string tab) => tab == "timetable" ? 250 : ExpandedH;
 
-    /// Okno má vždy přesně velikost ostrůvku (+ malá rezerva na stín), jinak by průhledná plocha blokovala kliknutí pod ní.
+    /// Okno má pevnou velikost (max. rozbalený ostrůvek), aby se při animaci nic neposouvalo. Ve sbaleném stavu je pro myš průhledné (click-through),
+    /// takže průhledná plocha neblokuje kliknutí pod ní.
     void SyncWindow()
     {
         var scr = Screens.Primary ?? Screens.All[0]; var scale = scr.Scaling;
-        double w = (expanded ? ExpandedW : CompactWidth()) + 24, h = (expanded ? ExpandedHeightFor(current) : CollapsedH) + 16;
-        if (w == lastW && h == lastH) return;   // beze změny neposouvat okno (každý resize je drahý)
-        lastW = w; lastH = h; Width = w; Height = h;
-        Position = new PixelPoint((int)(scr.Bounds.X + (scr.Bounds.Width - w * scale) / 2), scr.Bounds.Y);
+        double w = ExpandedW + 24, h = 250 + 16;
+        if (w != lastW || h != lastH) { lastW = w; lastH = h; Width = w; Height = h; Position = new PixelPoint((int)(scr.Bounds.X + (scr.Bounds.Width - w * scale) / 2), scr.Bounds.Y); }
+        Platform.SetClickThrough(TryGetPlatformHandle()?.Handle ?? IntPtr.Zero, !expanded);
     }
 
     void BuildTabs()
@@ -95,9 +95,9 @@ public partial class IslandWindow : Window
 
     void Expand()
     {
-        expanded = true; Compact.IsVisible = false; Expanded.IsVisible = true; CompactEq.Active = false;
+        expanded = true; Compact.Opacity = 0; Expanded.IsVisible = true; CompactEq.Active = false; DispatcherTimer.RunOnce(() => { if (expanded) Compact.IsVisible = false; }, TimeSpan.FromMilliseconds(150));
         Island.Height = current == "timetable" ? 250 : ExpandedH;
-        SyncWindow();   // nejdřív zvětšit okno, pak animovat obsah
+        SyncWindow();
         Island.Width = ExpandedW;
         if (Body.Content == null) Show(current);
         Expanded.Opacity = 1;
@@ -105,8 +105,8 @@ public partial class IslandWindow : Window
     public void Collapse()
     {
         expanded = false; holdOpen = false; Expanded.Opacity = 0;
-        Island.Width = CompactWidth(); Island.Height = CollapsedH;
-        DispatcherTimer.RunOnce(() => { if (!expanded) { Expanded.IsVisible = false; Compact.IsVisible = true; CompactEq.Active = CompactEq.IsVisible; } }, TimeSpan.FromMilliseconds(200));
+        Island.Width = CompactWidth(); Island.Height = CollapsedH; SyncWindow();
+        DispatcherTimer.RunOnce(() => { if (!expanded) { Expanded.IsVisible = false; Compact.IsVisible = true; Compact.Opacity = 1; CompactEq.Active = CompactEq.IsVisible; } }, TimeSpan.FromMilliseconds(220));
     }
 
     /// Hover podle skutečné polohy kurzoru (Windows); jinde přes PointerEntered/Exited.
@@ -147,7 +147,7 @@ public partial class IslandWindow : Window
             else { CompactLeftIcon.Text = FA.Spotify; CompactLeftIcon.FontFamily = FA.Brands; CompactLeftIcon.Foreground = Brushes.LightGreen; CompactLeftIcon.IsVisible = true; }
             CompactEq.IsVisible = true; CompactEq.Active = true;
         }
-        if (!expanded) { Island.Width = CompactWidth(); SyncWindow(); }
+        if (!expanded) Island.Width = CompactWidth();
         CompactEq.Active = CompactEq.IsVisible && !expanded;
     }
 

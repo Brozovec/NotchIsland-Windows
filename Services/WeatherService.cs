@@ -35,9 +35,9 @@ public sealed partial class WeatherService : ObservableObject
             if (st.WeatherCity != "" && (st.WeatherLat != 0 || st.WeatherLon != 0)) { lat = st.WeatherLat; lon = st.WeatherLon; Avalonia.Threading.Dispatcher.UIThread.Post(() => City = st.WeatherCity); }
             else if (lat == 0 && lon == 0)
             {
-                var ip = await Http.GetFromJsonAsync<JsonElement>("https://ipapi.co/json/");
-                lat = ip.GetProperty("latitude").GetDouble(); lon = ip.GetProperty("longitude").GetDouble();
-                var c = ip.TryGetProperty("city", out var cc) ? cc.GetString() ?? "" : "";
+                var (la, lo, c) = await LocateAsync();
+                if (la == 0 && lo == 0) { Log.W("weather: no location"); return; }
+                lat = la; lon = lo;
                 Avalonia.Threading.Dispatcher.UIThread.Post(() => City = c);
             }
             var url = $"https://api.open-meteo.com/v1/forecast?latitude={lat.ToString(System.Globalization.CultureInfo.InvariantCulture)}&longitude={lon.ToString(System.Globalization.CultureInfo.InvariantCulture)}&current=temperature_2m,weather_code,is_day&hourly=temperature_2m,weather_code,is_day&daily=temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=2";
@@ -57,6 +57,51 @@ public sealed partial class WeatherService : ObservableObject
             });
         }
         catch (Exception e) { Log.W("weather: " + e.Message); }
+    }
+
+    /// Poloha: 1) Windows Location API (GPS/Wi-Fi), 2) ipapi.co, 3) ip-api.com. Název města doplní Open-Meteo reverse geocoding.
+    async Task<(double, double, string)> LocateAsync()
+    {
+#if WINDOWS
+        try
+        {
+            var access = await Windows.Devices.Geolocation.Geolocator.RequestAccessAsync();
+            if (access == Windows.Devices.Geolocation.GeolocationAccessStatus.Allowed)
+            {
+                var g = new Windows.Devices.Geolocation.Geolocator { DesiredAccuracyInMeters = 1000 };
+                var p = await g.GetGeopositionAsync(TimeSpan.FromMinutes(10), TimeSpan.FromSeconds(8));
+                var la = p.Coordinate.Point.Position.Latitude; var lo = p.Coordinate.Point.Position.Longitude;
+                if (la != 0 || lo != 0) return (la, lo, await ReverseAsync(la, lo));
+            }
+            else Log.W("weather: location access " + access);
+        }
+        catch (Exception e) { Log.W("weather: geolocator " + e.Message); }
+#endif
+        try
+        {
+            var ip = await Http.GetFromJsonAsync<JsonElement>("https://ipapi.co/json/");
+            if (ip.TryGetProperty("latitude", out var la) && ip.TryGetProperty("longitude", out var lo))
+                return (la.GetDouble(), lo.GetDouble(), ip.TryGetProperty("city", out var c) ? c.GetString() ?? "" : "");
+        }
+        catch (Exception e) { Log.W("weather: ipapi " + e.Message); }
+        try
+        {
+            var ip = await Http.GetFromJsonAsync<JsonElement>("http://ip-api.com/json/?fields=lat,lon,city");
+            return (ip.GetProperty("lat").GetDouble(), ip.GetProperty("lon").GetDouble(), ip.TryGetProperty("city", out var c) ? c.GetString() ?? "" : "");
+        }
+        catch (Exception e) { Log.W("weather: ip-api " + e.Message); }
+        return (0, 0, "");
+    }
+    static async Task<string> ReverseAsync(double la, double lo)
+    {
+        try
+        {
+            var ci = System.Globalization.CultureInfo.InvariantCulture;
+            var j = await Http.GetFromJsonAsync<JsonElement>($"https://api.bigdatacloud.net/data/reverse-geocode-client?latitude={la.ToString(ci)}&longitude={lo.ToString(ci)}&localityLanguage={(L.Lang == "cs" ? "cs" : "en")}");
+            foreach (var k in new[] { "city", "locality", "principalSubdivision" }) if (j.TryGetProperty(k, out var v) && v.GetString() is { Length: > 0 } n) return n;
+        }
+        catch { }
+        return "";
     }
 
     /// Ruční výběr města přes Open-Meteo geocoding. Vrátí název nalezeného místa, nebo null.

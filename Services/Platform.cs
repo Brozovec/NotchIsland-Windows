@@ -34,6 +34,22 @@ public static class Platform
     [StructLayout(LayoutKind.Sequential)] struct MONITORINFO { public int Size; public RECT Monitor, Work; public uint Flags; }
 #endif
 
+#if WINDOWS
+    [DllImport("user32.dll")] static extern IntPtr GetWindowLongPtr(IntPtr h, int i);
+    [DllImport("user32.dll")] static extern IntPtr SetWindowLongPtr(IntPtr h, int i, IntPtr v);
+#endif
+    /// Průhledné pro myš (WS_EX_TRANSPARENT): sbalený ostrůvek neblokuje kliknutí pod oknem.
+    public static void SetClickThrough(IntPtr hwnd, bool on)
+    {
+#if WINDOWS
+        if (hwnd == IntPtr.Zero) return;
+        const int GWL_EXSTYLE = -20; const long WS_EX_TRANSPARENT = 0x20, WS_EX_LAYERED = 0x80000;
+        var ex = GetWindowLongPtr(hwnd, GWL_EXSTYLE).ToInt64();
+        ex = on ? ex | WS_EX_TRANSPARENT | WS_EX_LAYERED : ex & ~WS_EX_TRANSPARENT;
+        SetWindowLongPtr(hwnd, GWL_EXSTYLE, new IntPtr(ex));
+#endif
+    }
+
     /// Běží v popředí celoobrazovková aplikace (video, hra, prezentace)? Kombinuje SHQueryUserNotificationState a rozměr okna v popředí.
     public static bool IsForegroundFullscreen()
     {

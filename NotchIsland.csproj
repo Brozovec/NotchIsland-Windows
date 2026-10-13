@@ -13,6 +13,7 @@
     <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <InvariantGlobalization>false</InvariantGlobalization>
+    <ApplicationIcon>Assets/icon.ico</ApplicationIcon>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net8.0-windows'))">
